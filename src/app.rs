@@ -4,8 +4,11 @@ use tui::{widgets::ListState, backend::Backend, Frame, layout::{Direction, Const
 
 use crate::{
     components::{
+        tab::Tab,
         HeaderComponent,
-        TabComponent, tab::Tab
+        NodesComponent,
+        PodsComponent,
+        TabComponent,
     }
 };
 
@@ -15,16 +18,54 @@ pub struct StatefulList<T> {
     pub items: Vec<T>,
 }
 
-pub struct App {
+impl<T> StatefulList<T> {
+    pub fn with_items(items: Vec<T>) -> StatefulList<T> {
+        StatefulList {
+            state: ListState::default(),
+            items,
+        }
+    }
+}
+
+pub struct AppComponents {
     pub header: HeaderComponent,
+    pub nodes: NodesComponent,
+    pub pods: PodsComponent,
     pub tab: TabComponent,
 }
 
+pub struct AppState {
+    pub context: String,
+    pub pods: StatefulList<String>,
+    pub nodes: StatefulList<String>,
+}
+
+
+pub struct App {
+    pub components: AppComponents,
+    pub state: AppState
+}
+
 impl App {
-    pub fn new(ctx: String) -> Self {
+    pub fn new(state: AppState) -> Self {
         Self {
-            header: HeaderComponent::new(ctx),
-            tab: TabComponent::new(),
+            components: AppComponents {
+                header: HeaderComponent::new(state.context.clone()),
+                nodes: NodesComponent::new(state.nodes),
+                pods: PodsComponent::new(state.pods),
+                tab: TabComponent::new(),
+            },
+            state: AppState {
+                context: state.context,
+                pods: StatefulList {
+                    state: ListState::default(),
+                    items: vec![]
+                },
+                nodes: StatefulList {
+                    state: ListState::default(),
+                    items: vec![]
+                }
+            }
         }
     }
 
@@ -48,16 +89,16 @@ impl App {
             ].as_ref())
             .split(wrapper[1]);
     
-        self.header.draw(f, wrapper[0]);
+        self.components.header.draw(f, wrapper[0]);
 
-        self.tab.draw(f, main_chunks[0]);
+        self.components.tab.draw(f, main_chunks[0]);
 
-        match self.tab.selected_tab {
+        match self.components.tab.selected_tab {
             Tab::Pods => {
-                self.header.draw(f, main_chunks[1])
+                self.components.pods.draw(f, main_chunks[1])
             }
             Tab::Nodes => {
-                self.header.draw(f, main_chunks[1])
+                self.components.nodes.draw(f, main_chunks[1])
             }
         }
 

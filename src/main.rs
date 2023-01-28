@@ -1,5 +1,5 @@
-use app::{App};
-use components::tab::{Tab};
+use app::{App, StatefulList, AppState};
+use components::tab::Tab;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
@@ -19,9 +19,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     
     let backend = CrosstermBackend::new(io::stdout());
     let mut terminal = Terminal::new(backend)?;
-    let mut app = App::new(
-        get_current_context()
-    );
+    let mut app = App::new(AppState {
+        context: get_current_context(),
+        pods: StatefulList::with_items(get_current_pods()),
+        nodes: StatefulList::with_items(get_current_nodes()),
+    });
 
     loop {
         terminal.draw(|f| {
@@ -35,10 +37,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                     break;
                 }
                 KeyCode::Char('1') => {
-                    app.tab.selected_tab = Tab::Pods;
+                    app.components.tab.selected_tab = Tab::Pods;
                 }
                 KeyCode::Char('2') => {
-                    app.tab.selected_tab = Tab::Nodes;
+                    app.components.tab.selected_tab = Tab::Nodes;
                 }
                 _ => {}
             }
@@ -55,6 +57,24 @@ fn get_current_context() -> String {
         .expect("Failed to get current K8 context");
     let context = String::from_utf8_lossy(&output.stdout);
     context.trim().to_string()
+}
+
+fn get_current_pods() -> Vec<String> {
+    let output = Command::new("kubectl")
+        .args(&["get", "pods", "-A"])
+        .output()
+        .expect("Failed to get current K8 pods");
+    let pods = String::from_utf8_lossy(&output.stdout);
+    pods.lines().map(|s| s.to_string()).collect()
+}
+
+fn get_current_nodes() -> Vec<String> {
+    let output = Command::new("kubectl")
+        .args(&["get", "nodes", "-o", "name"])
+        .output()
+        .expect("Failed to get current K8 nodes");
+    let nodes = String::from_utf8_lossy(&output.stdout);
+    nodes.lines().map(|s| s.to_string()).collect()
 }
 
 fn setup_terminal() -> Result<(), Box<dyn Error>> {
