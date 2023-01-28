@@ -1,4 +1,5 @@
 use app::{App};
+use components::tab::{Tab};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
@@ -24,7 +25,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     loop {
         terminal.draw(|f| {
-            app.draw(f);
+            app.draw(f).expect("Failed to draw app");
         })?;
 
         if let Event::Key(key) = event::read()? {
@@ -32,6 +33,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                 KeyCode::Char('q') => {
                     shutdown_terminal()?;
                     break;
+                }
+                KeyCode::Char('1') => {
+                    app.tab.selected_tab = Tab::Pods;
+                }
+                KeyCode::Char('2') => {
+                    app.tab.selected_tab = Tab::Nodes;
                 }
                 _ => {}
             }
