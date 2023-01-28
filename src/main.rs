@@ -36,10 +36,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                     shutdown_terminal()?;
                     break;
                 }
-                KeyCode::Char('1') => {
+                KeyCode::Char('p') => {
                     app.components.tab.selected_tab = Tab::Pods;
                 }
-                KeyCode::Char('2') => {
+                KeyCode::Char('n') => {
                     app.components.tab.selected_tab = Tab::Nodes;
                 }
                 _ => {}

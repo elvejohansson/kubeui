@@ -19,8 +19,8 @@ impl TabComponent {
 
     fn names(&self) -> Vec<String> {
         vec![
-            String::from(format!("[{}] Pods", 1)),
-            String::from(format!("[{}] Nodes", 2)),
+            String::from(format!("[{}] Pods", "p")),
+            String::from(format!("[{}] Nodes", "n"))
         ]
     }
 
@@ -36,7 +36,7 @@ impl TabComponent {
             .style(Style::default())
             .highlight_style(
                 Style::default()
-                .fg(Color::LightBlue)
+                .fg(Color::Blue)
                 .add_modifier(Modifier::BOLD)
             )
             .divider("");
