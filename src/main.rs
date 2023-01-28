@@ -1,81 +1,75 @@
+use app::{App};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen}, cursor::{Show, Hide},
 };
-use std::{error::Error, io};
+use std::{error::Error, io, process::Command};
 use tui::{
-    backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout},
-    widgets::{Block, BorderType, Borders, Paragraph},
-    Frame, Terminal,
+    backend::CrosstermBackend,
+    Terminal,
 };
+
+mod components;
+mod app;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // setup terminal
-    enable_raw_mode()?;
-    let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-    let backend = CrosstermBackend::new(stdout);
+    setup_terminal()?;
+    
+    let backend = CrosstermBackend::new(io::stdout());
     let mut terminal = Terminal::new(backend)?;
+    let mut app = App::new(
+        get_current_context()
+    );
 
-    // create app and run it
-    let res = run_app(&mut terminal);
+    loop {
+        terminal.draw(|f| {
+            app.draw(f);
+        })?;
 
-    // restore terminal
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    terminal.show_cursor()?;
-
-    if let Err(err) = res {
-        println!("{:?}", err)
+        if let Event::Key(key) = event::read()? {
+            match key.code {
+                KeyCode::Char('q') => {
+                    shutdown_terminal()?;
+                    break;
+                }
+                _ => {}
+            }
+        }
     }
 
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
-    loop {
-        terminal.draw(ui)?;
-
-        if let Event::Key(key) = event::read()? {
-            if let KeyCode::Char('q') = key.code {
-                return Ok(());
-            }
-        }
-    }
+fn get_current_context() -> String {
+    let output = Command::new("kubectl")
+        .args(&["config", "current-context"])
+        .output()
+        .expect("Failed to get current K8 context");
+    let context = String::from_utf8_lossy(&output.stdout);
+    context.trim().to_string()
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>) {
-    // Wrapping block for a group
-    // Just draw the block and the group on the same area and build the group
-    // with at least a margin of 1
-    let size = f.size();
+fn setup_terminal() -> Result<(), Box<dyn Error>> {
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(
+        stdout,
+        EnterAlternateScreen,
+        EnableMouseCapture,
+        Hide
+    )?;
+    Ok(())
+}
 
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(0)
-        .constraints(
-            [
-                Constraint::Length(4),
-                Constraint::Min(0),
-            ]
-            .as_ref(),
-        )
-        .split(size);
-
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title("Context(s)")
-        .border_type(BorderType::Plain);
-    let text = Paragraph::new("Hello world")
-        .block(block)
-        .alignment(Alignment::Left);
-    f.render_widget(text, chunks[0]);
-
-    
+fn shutdown_terminal() -> Result<(), Box<dyn Error>> {
+    disable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(
+        stdout,
+        LeaveAlternateScreen,
+        DisableMouseCapture,
+        Show
+    )?;
+    Ok(())
 }
