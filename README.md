@@ -1,6 +1,11 @@
-# kubetui 
+<div align="center">
 
-A terminal-based UI for managing K8s clusters and resources, written in Rust.
+# kubetui
+
+#### A terminal-based UI for managing K8s clusters and resources, written in Rust 🦀
+
+<br>
+</div>
 
 ![preview](https://user-images.githubusercontent.com/47827286/215286233-ae454cda-487b-46a0-9654-cb79e8cdced9.png)
 
@@ -8,11 +13,19 @@ A terminal-based UI for managing K8s clusters and resources, written in Rust.
 
 As this is a hobby project of mine, I'm not aiming to implement all the features that the official `kubectl` tool has. Instead, I'm focusing on the features that I personally find most useful. The following features are currently implemented and/or planned:
 
-- [ ] General cluster information
-- [ ] List pods
-- [ ] List namespaces
-- [ ] List nodes
-- [ ] Switching between contexts
+- **General cluster information:**
+    - [x] Display current context
+    - [ ] See version for k8s and local `kubectl`
+- **Pods:**
+    - [x] List all pods in cluster
+    - [ ] See logs for any given pod
+    - [ ] List all pods in current/specific namespace
+- **Nodes:**
+    - [x] List all nodes in cluster
+- **Namespaces:**
+    - [ ] List and switch between namespaces
+- **Contexts:**
+    - [ ] List and switch between contexts
 
 ## Installation
 
