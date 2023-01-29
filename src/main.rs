@@ -5,7 +5,7 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen}, cursor::{Show, Hide},
 };
-use std::{error::Error, io, process::Command};
+use std::{error::Error, io, process::Command, sync::mpsc, thread, time::{Instant, Duration}};
 use tui::{
     backend::CrosstermBackend,
     Terminal,
@@ -13,6 +13,11 @@ use tui::{
 
 mod components;
 mod app;
+
+enum UEvent<I> {
+    Input(I),
+    Tick,
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     setup_terminal()?;
@@ -25,25 +30,53 @@ fn main() -> Result<(), Box<dyn Error>> {
         nodes: StatefulList::with_items(get_current_nodes()),
     });
 
+    let (sender, receiver) = mpsc::channel();
+    let tick_rate = std::time::Duration::from_millis(100);
+
+    thread::spawn(move || {
+        let mut last_tick = Instant::now();
+
+        loop {
+            let timeout = tick_rate
+                .checked_sub(last_tick.elapsed())
+                .unwrap_or_else(|| Duration::from_secs(0));
+            if event::poll(timeout).unwrap() {
+                if let Event::Key(key) = event::read().unwrap() {
+                    sender.send(UEvent::Input(key)).unwrap();
+                }
+            }
+            if last_tick.elapsed() >= tick_rate {
+                sender.send(UEvent::Tick).unwrap();
+                last_tick = Instant::now();
+            }
+        }
+    });
+
     loop {
         terminal.draw(|f| {
             app.draw(f).expect("Failed to draw app");
         })?;
 
-        if let Event::Key(key) = event::read()? {
-            match key.code {
-                KeyCode::Char('q') => {
-                    shutdown_terminal()?;
-                    break;
+        match receiver.recv()? {
+            UEvent::Input(key) => {
+                match key.code {
+                    KeyCode::Char('q') => {
+                        shutdown_terminal()?;
+                        break;
+                    }
+                    KeyCode::Char('p') => {
+                        app.components.tab.selected_tab = Tab::Pods;
+                    }
+                    KeyCode::Char('n') => {
+                        app.components.tab.selected_tab = Tab::Nodes;
+                    }
+                    KeyCode::Char('c') => {
+                        app.state.context = get_current_context();
+                    }
+                    _ => {}
                 }
-                KeyCode::Char('p') => {
-                    app.components.tab.selected_tab = Tab::Pods;
-                }
-                KeyCode::Char('n') => {
-                    app.components.tab.selected_tab = Tab::Nodes;
-                }
-                _ => {}
             }
+            UEvent::Tick => {}
         }
     }
 
