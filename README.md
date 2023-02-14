@@ -1,6 +1,6 @@
 <div align="center">
 
-# kubetui
+# kubeui
 
 #### A terminal-based UI for managing K8s clusters and resources, written in Rust 🦀
 
@@ -29,7 +29,7 @@ As this is a hobby project of mine, I'm not aiming to implement all the features
 
 ## Installation
 
-When the project is ready for release, pre-built binaries will be available for download either from the [releases page](https://github.com/elvejohansson/kubetui/releases) or from the various package managers. For now, as the project is still in its early stages, you will have to build it from source.
+When the project is ready for release, pre-built binaries will be available for download either from the [releases page](https://github.com/elvejohansson/kubeui/releases) or from the various package managers. For now, as the project is still in its early stages, you will have to build it from source.
 
 ### Prerequisites
 
@@ -40,9 +40,9 @@ As you might have guessed, you will also need to have Rust installed. You can fi
 ### From source
 
 ```bash
-git clone https://github.com/elvejohansson/kubetui.git
+git clone https://github.com/elvejohansson/kubeui.git
 
-cd kubetui
+cd kubeui
 
 cargo install --path .
 ```
@@ -50,7 +50,7 @@ cargo install --path .
 ##  Usage
 
 ```bash
-kubetui
+kubeui
 ```
 
 ## Contributing

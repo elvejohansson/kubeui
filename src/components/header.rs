@@ -18,7 +18,7 @@ impl HeaderComponent {
     ) {
         let header_block = Block::default()
             .borders(Borders::ALL)
-            .title(format!("kubetui - {}", env!("CARGO_PKG_VERSION")))
+            .title(format!("kubeui - {}", env!("CARGO_PKG_VERSION")))
             .style(Style::default().add_modifier(Modifier::BOLD))
             .title_alignment(Alignment::Center);
 
